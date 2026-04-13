@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { noteController } from '../controllers/noteController.js';
+import { noteController } from '../controllers/noteController';
 
 const router = new Hono();
 

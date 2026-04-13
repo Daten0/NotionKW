@@ -1,6 +1,7 @@
-import mysql from 'mysql2/promise';
+import mysql, { Pool } from 'mysql2/promise';
 
-const pool = mysql.createPool({
+// Pastikan Anda sudah run: bun add -d @types/node
+const pool: Pool = mysql.createPool({
   host: process.env.DB_HOST ?? 'localhost',
   port: parseInt(process.env.DB_PORT ?? '3306'),
   user: process.env.DB_USER ?? 'root',

@@ -1,80 +1,121 @@
-import { Context } from 'hono';
-import { noteRepository } from '../repositories/noteRepository.js';
+import pool from '../config/db.js';
+import { Note, NoteInput } from '../types/note.js';
+import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import type { Context } from 'hono';
 
-export const noteController = {
-  async getAll(c: Context) {
+const noteRepository = {
+  async findAll(): Promise<Note[]> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT id, title, content, created_at, updated_at FROM notes ORDER BY updated_at DESC'
+    );
+    return rows as Note[];
+  },
+
+  async findById(id: number): Promise<Note | undefined> {
+    const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM notes WHERE id = ?', [id]);
+    return rows[0] as Note | undefined;
+  },
+
+  async create({ title, content }: NoteInput): Promise<Note> {
+    const [result] = await pool.query<ResultSetHeader>(
+      'INSERT INTO notes (title, content) VALUES (?, ?)',
+      [title, content]
+    );
+    const newNote = await this.findById(result.insertId);
+    if (!newNote) {
+      throw new Error('Failed to create or retrieve note.');
+    }
+    return newNote;
+  },
+
+  async update(id: number, { title, content }: NoteInput): Promise<Note | undefined> {
+    await pool.query(
+      'UPDATE notes SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [title, content, id]
+    );
+    return this.findById(id);
+  },
+
+  async delete(id: number): Promise<boolean> {
+    const [result] = await pool.query<ResultSetHeader>('DELETE FROM notes WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+  }
+};
+
+const noteController = {
+  getAll: async (c: Context) => {
     try {
       const notes = await noteRepository.findAll();
       return c.json(notes);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ [GET /notes]', err);
-      return c.json({ error: 'Gagal mengambil catatan' }, 500);
+    } catch (error: any) {
+      return c.json({ message: 'Error fetching notes', error: error.message }, 500);
     }
   },
 
-  async getOne(c: Context) {
+  getOne: async (c: Context) => {
     try {
-      const id = parseInt(c.req.param('id'));
-      if (isNaN(id)) return c.json({ error: 'ID tidak valid' }, 400);
-      
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) {
+        return c.json({ message: 'Invalid ID' }, 400);
+      }
       const note = await noteRepository.findById(id);
-      if (!note) return c.json({ error: 'Catatan tidak ditemukan' }, 404);
-      
-      return c.json(note);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ [GET /notes/:id]', err);
-      return c.json({ error: 'Gagal memuat catatan' }, 500);
+      if (note) {
+        return c.json(note);
+      }
+      return c.json({ message: 'Note not found' }, 404);
+    } catch (error: any) {
+      return c.json({ message: 'Error fetching note', error: error.message }, 500);
     }
   },
 
-  async create(c: Context) {
+  create: async (c: Context) => {
     try {
-      const body = await c.req.json<{ title?: string; content?: string }>();
-      const { title, content } = body;
-      
-      const newNote = await noteRepository.create({ 
-        title: title?.trim() || 'Tanpa Judul', 
-        content: content || '' 
-      });
+      const body = await c.req.json<NoteInput>();
+      if (!body.title || !body.content) {
+        return c.json({ message: 'Title and content are required' }, 400);
+      }
+      const newNote = await noteRepository.create(body);
       return c.json(newNote, 201);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ [POST /notes]', err);
-      return c.json({ error: 'Gagal membuat catatan' }, 500);
+    } catch (error: any) {
+      return c.json({ message: 'Error creating note', error: error.message }, 500);
     }
   },
 
-  async update(c: Context) {
+  update: async (c: Context) => {
     try {
-      const id = parseInt(c.req.param('id'));
-      const body = await c.req.json<{ title?: string; content?: string }>();
-      const { title, content } = body;
-      
-      const updated = await noteRepository.update(id, {
-        title: title?.trim() || 'Tanpa Judul',
-        content: content || ''
-      });
-      return c.json(updated);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ [PUT /notes/:id]', err);
-      return c.json({ error: 'Gagal memperbarui catatan' }, 500);
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) {
+        return c.json({ message: 'Invalid ID' }, 400);
+      }
+      const body = await c.req.json<NoteInput>();
+      if (!body.title || !body.content) {
+        return c.json({ message: 'Title and content are required' }, 400);
+      }
+      const updatedNote = await noteRepository.update(id, body);
+      if (updatedNote) {
+        return c.json(updatedNote);
+      }
+      return c.json({ message: 'Note not found' }, 404);
+    } catch (error: any) {
+      return c.json({ message: 'Error updating note', error: error.message }, 500);
     }
   },
 
-  async delete(c: Context) {
+  delete: async (c: Context) => {
     try {
-      const id = parseInt(c.req.param('id'));
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) {
+        return c.json({ message: 'Invalid ID' }, 400);
+      }
       const success = await noteRepository.delete(id);
-      if (!success) return c.json({ error: 'Catatan tidak ditemukan' }, 404);
-      
-      return c.json({ message: 'Catatan berhasil dihapus' });
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ [DELETE /notes/:id]', err);
-      return c.json({ error: 'Gagal menghapus catatan' }, 500);
+      if (success) {
+        return c.body(null, 204);
+      }
+      return c.json({ message: 'Note not found' }, 404);
+    } catch (error: any) {
+      return c.json({ message: 'Error deleting note', error: error.message }, 500);
     }
   }
 };
+
+export { noteController };

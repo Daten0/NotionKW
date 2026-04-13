@@ -1,26 +1,27 @@
 import pool from '../config/db.js';
 import { Note, NoteInput } from '../types/note.js';
+import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 export const noteRepository = {
   async findAll(): Promise<Note[]> {
-    const [rows] = await pool.query<Note[]>(
+    const [rows] = await pool.query<RowDataPacket[]>(
       'SELECT id, title, content, created_at, updated_at FROM notes ORDER BY updated_at DESC'
     );
-    return rows;
+    return rows as Note[];
   },
 
   async findById(id: number): Promise<Note | undefined> {
-    const [rows] = await pool.query<Note[]>('SELECT * FROM notes WHERE id = ?', [id]);
-    return rows[0];
+    const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM notes WHERE id = ?', [id]);
+    return rows[0] as Note | undefined;
   },
 
   async create({ title, content }: NoteInput): Promise<Note> {
-    const [result] = await pool.query(
+    const [result] = await pool.query<ResultSetHeader>(
       'INSERT INTO notes (title, content) VALUES (?, ?)',
       [title, content]
     );
     return {
-      id: (result as any).insertId,
+      id: result.insertId,
       title,
       content,
       created_at: new Date(),
@@ -37,7 +38,7 @@ export const noteRepository = {
   },
 
   async delete(id: number): Promise<boolean> {
-    const [result] = await pool.query('DELETE FROM notes WHERE id = ?', [id]);
-    return (result as any).affectedRows > 0;
+    const [result] = await pool.query<ResultSetHeader>('DELETE FROM notes WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 };
