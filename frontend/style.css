@@ -1,0 +1,31 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f7f6f3; color: #37352f; }
+.container { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar { width: 260px; background: #fbfbfa; border-right: 1px solid #e3e2e0; padding: 20px; display: flex; flex-direction: column; }
+.sidebar h2 { font-size: 1.1rem; margin-bottom: 15px; }
+#new-note-btn { padding: 8px 12px; background: #2eaadc; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px; transition: 0.2s; }
+#new-note-btn:hover { background: #258bbd; }
+#notes-list { list-style: none; overflow-y: auto; flex: 1; padding-right: 5px; }
+.note-item { padding: 10px; margin-bottom: 8px; background: white; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+.note-item:hover { background: #f0f0f0; }
+.note-item.active { background: #e8f4fd; border-left: 3px solid #2eaadc; }
+.note-actions button { margin-left: 5px; padding: 4px 6px; font-size: 0.8rem; border: none; background: none; cursor: pointer; }
+.note-actions button:hover { opacity: 0.7; }
+
+/* Editor */
+.editor-area { flex: 1; display: flex; flex-direction: column; padding: 30px; background: white; }
+.editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+#note-title { font-size: 1.5rem; border: none; outline: none; flex: 1; padding: 8px; background: transparent; font-weight: 600; }
+#save-btn { padding: 8px 16px; background: #2eaadc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+#save-btn:hover { background: #258bbd; }
+
+.editor-content { display: flex; gap: 20px; flex: 1; }
+#markdown-input { flex: 1; padding: 15px; font-family: 'Courier New', monospace; font-size: 14px; border: 1px solid #ddd; border-radius: 4px; resize: none; outline: none; line-height: 1.5; }
+#markdown-preview { flex: 1; padding: 15px; border: 1px solid #eee; border-radius: 4px; background: #fafafa; overflow-y: auto; }
+#markdown-preview h1, #markdown-preview h2, #markdown-preview h3 { margin-top: 0; margin-bottom: 10px; }
+#markdown-preview p { margin-bottom: 10px; line-height: 1.6; }
+#markdown-preview code { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; }
+#markdown-preview pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; margin-bottom: 10px; }
+#markdown-preview ul, #markdown-preview ol { margin-left: 20px; margin-bottom: 10px; }
