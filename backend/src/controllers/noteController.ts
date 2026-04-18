@@ -71,7 +71,10 @@ const noteController = {
   create: async (c: Context) => {
     try {
       const body = await c.req.json<NoteInput>();
-      if (!body.title || !body.content) {
+      // ✅ BENAR: Handle undefined/null, tapi izinkan string kosong
+      const title = body.title?.trim() || 'Tanpa Judul';
+      const content = body.content ?? '';  // "" adalah valid
+      if (!title || !content) {
         return c.json({ message: 'Title and content are required' }, 400);
       }
       const newNote = await noteRepository.create(body);
@@ -88,7 +91,10 @@ const noteController = {
         return c.json({ message: 'Invalid ID' }, 400);
       }
       const body = await c.req.json<NoteInput>();
-      if (!body.title || !body.content) {
+      // ✅ BENAR: Handle undefined/null, tapi izinkan string kosong
+      const title = body.title?.trim() || 'Tanpa Judul';
+      const content = body.content ?? '';  // "" adalah valid
+      if (!title || !content) {
         return c.json({ message: 'Title and content are required' }, 400);
       }
       const updatedNote = await noteRepository.update(id, body);
