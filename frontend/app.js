@@ -1,3 +1,33 @@
+// 🔌 Helper fetch dengan default headers JSON (tambah di atas file app.js)
+const apiFetch = async (url, options = {}) => {
+    const defaultHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers
+    };
+    
+    const config = {
+        ...options,
+        headers: defaultHeaders
+    };
+    
+    // Auto-stringify body jika ada & method bukan GET/HEAD
+    if (!['GET', 'HEAD'].includes(config.method) && options.body !== undefined) {
+        config.body = JSON.stringify(options.body);
+    }
+    
+    const res = await fetch(url, config);
+    
+    // Auto-parse JSON hanya jika response adalah JSON
+    const contentType = res.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        return data;
+    }
+    
+    return res;
+};
 // 🔌 Konfigurasi API (akan di-proxy oleh Nginx di Docker nanti)
 const API_BASE = '/api'; 
 
