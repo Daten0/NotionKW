@@ -11,6 +11,8 @@
 
 FROM nginx:alpine
 
+RUN rm /usr/share/nginx/html/*
+
 # Copy konfigurasi proxy Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 

@@ -101,19 +101,22 @@ const noteController = {
     }
   },
 
-  delete: async (c: Context) => {
+  delete: async(c: Context) => {
     try {
-      const id = Number(c.req.param('id'));
-      if (isNaN(id)) {
-        return c.json({ message: 'Invalid ID' }, 400);
-      }
+      const idStr = c.req.param('id');
+      if (!idStr) return c.json({ error: 'ID tidak valid' }, 400);
+      
+      const id = parseInt(idStr);
+      if (isNaN(id)) return c.json({ error: 'ID harus angka' }, 400);
+      
       const success = await noteRepository.delete(id);
-      if (success) {
-        return c.body(null, 204);
-      }
-      return c.json({ message: 'Note not found' }, 404);
-    } catch (error: any) {
-      return c.json({ message: 'Error deleting note', error: error.message }, 500);
+      if (!success) return c.json({ error: 'Catatan tidak ditemukan' }, 404);
+      
+      // ✅ Return JSON dengan status 200 (bukan 204)
+      return c.json({ message: 'Catatan berhasil dihapus' }, 200);
+    } catch (error) {
+      console.error('❌ [DELETE /notes/:id]', error);
+      return c.json({ error: error instanceof Error ? error.message : 'Gagal menghapus catatan' }, 500);
     }
   }
 };

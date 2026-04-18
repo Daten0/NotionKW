@@ -105,17 +105,13 @@ async function saveNote() {
     const method = isUpdate ? 'PUT' : 'POST';
 
     try {
-        const res = await fetch(url, {
+        const data = await apiFetch(url, {
             method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content })
+            body: { title, content }  // ← Auto stringify!
         });
-        const data = await res.json();
         
-        // Jika baru dibuat, simpan ID yang dikembalikan backend
         if (!isUpdate) currentNoteId = data.id;
-        
-        await loadNotes(); // Refresh sidebar
+        await loadNotes();
         console.log('✅ Catatan berhasil disimpan');
     } catch (err) {
         console.error('❌ Gagal menyimpan catatan:', err);
@@ -125,9 +121,23 @@ async function saveNote() {
 async function deleteNote(id) {
     if (!confirm('Yakin ingin menghapus catatan ini?')) return;
     try {
-        await fetch(`${API_BASE}/notes/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/notes/${id}`, {
+            method: 'DELETE',
+            headers: {
+                // Optional: hanya jika backend Anda memvalidasi header
+                'Accept': 'application/json'
+            }
+        });
+        
+        // Optional: cek response jika backend return pesan
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Gagal menghapus');
+        }
+        
         if (currentNoteId === id) createNewNote();
         await loadNotes();
+        console.log('✅ Catatan berhasil dihapus');
     } catch (err) {
         console.error('❌ Gagal menghapus catatan:', err);
     }
