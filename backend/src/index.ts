@@ -45,18 +45,18 @@ const initDB = async (): Promise<void> => {
   }
 };
 
-const PORT = parseInt(process.env.PORT ?? '3000');
+const APP_PORT = parseInt(process.env.APP_PORT ?? '3000');
 
 
 initDB()
   .then(() => {
     // ✅ Gunakan Bun.serve() alih-alih app.listen()
     Bun.serve({
-      port: PORT,
+      port: APP_PORT,
       hostname: '0.0.0.0',
       fetch: app.fetch,
     });
-    console.log(`🚀 Backend aktif di http://localhost:${PORT}`);
+    console.log(`🚀 Backend aktif di http://localhost:${APP_PORT}`);
   })
   .catch(err => {
     console.error('❌ Fatal: Gagal inisialisasi database', err);
