@@ -8,7 +8,7 @@ RUN bun install --frozen-lockfile || bun install
 
 COPY . .
 
-EXPOSE 3001
+EXPOSE 3000
 
 # Bun bisa menjalankan .ts secara native tanpa perlu compile step
 CMD ["bun", "run", "src/index.ts"]

@@ -44,8 +44,15 @@ const initDB = async (): Promise<void> => {
     }
   }
 };
-
-const APP_PORT = parseInt(process.env.APP_PORT ?? '3000');
+// 🔐 Helper: Validasi env var wajib ada
+const getEnv = (key: string): string => {
+  const value = process.env[key];
+  if (value === undefined || value.trim() === '') {
+    throw new Error(`❌ Environment variable "${key}" is required but not set.`);
+  }
+  return value;
+};
+const APP_PORT = parseInt(getEnv('APP_PORT'));
 
 
 initDB()

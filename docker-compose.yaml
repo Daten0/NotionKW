@@ -27,10 +27,13 @@ services:
     environment:
       # ⚠️ PENTING: Override khusus Docker Network
       DB_HOST: db             # ✅ "db" adalah nama service container database
-      APP_PORT: ${APP_PORT}              # ✅ Backend jalan di port 3000 (bukan 3306)
-      DB_PORT: ${DB_PORT}          # ✅ Port internal MySQL di container db
+      DB_USER: ${DB_USER}     # ✅ Explicit from .env
+      DB_PASSWORD: ${DB_PASSWORD}  # ✅ Explicit from .env
+      DB_NAME: ${DB_NAME}     # ✅ Explicit from .env
+      APP_PORT: ${APP_PORT}   # ✅ Backend jalan di port 3000
+      DB_PORT: ${DB_PORT}     # ✅ Port internal MySQL di container db
     ports:
-      - "${APP_PORT}:3000"           # ✅ Sesuaikan dengan PORT aplikasi
+      - "${APP_PORT}:3000"    # ✅ Sesuaikan dengan PORT aplikasi
     depends_on:
       - db
     networks:
@@ -44,7 +47,7 @@ services:
     container_name: notion_frontend
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       - backend
     networks:
@@ -105,19 +108,23 @@ services:
     restart: unless-stopped
     privileged: true # Untuk sementara waktu diberikan akses root
     ports:
-      - "8081:8080"
+      - "8082:8080"
     volumes:
-      - /:/rootfs:ro,Z                    # ← Tambah :Z
-      - /var/run:/var/run:ro,Z            # ← Tambah :Z
-      - /sys:/sys:ro,Z                    # ← Tambah :Z
-      # - /var/lib/containers/storage:/var/lib/docker:ro,Z  # ← Tambah :Z (PENTING)
-      - /dev/disk/:/dev/disk:ro,Z         # ← Tambah :Z
+      - /:/rootfs:ro,Z
+      - /sys:/sys:ro,Z
+      - /dev/disk/:/dev/disk:ro,Z
+      - /etc/machine-id:/etc/machine-id:ro,Z  # ✅ Required for host identification
+      # ✅ Use your actual rootless storage path
+      - ${HOME}/.local/share/containers:/var/lib/containers:ro,Z
+      # ✅ Map the user-level Podman socket
+      - ${XDG_RUNTIME_DIR}/podman/podman.sock:/var/run/podman.sock:ro,Z
     command:
       - '--housekeeping_interval=10s'
       - '--docker=false'
       - '--containerd=false'
       - '--podman=true'
-      - '--store_container_labels=false'
+      # ✅ Tell cAdvisor where the socket is inside the container
+      - '--podman-endpoint=unix:///var/run/podman.sock'
     networks:
       - notion_net
     deploy:

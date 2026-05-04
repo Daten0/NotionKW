@@ -35,14 +35,36 @@ let currentNoteId = null;
 let autoSaveTimer = null;
 const DEBOUNCE_DELAY = 1200; // ms
 
-const titleInput = document.getElementById('note-title');
-const markdownInput = document.getElementById('markdown-input');
-const previewDiv = document.getElementById('markdown-preview');
-const notesList = document.getElementById('notes-list');
-const saveBtn = document.getElementById('save-btn');
-const newNoteBtn = document.getElementById('new-note-btn');
+// ✅ Declare variables without initializing (will be set in DOMContentLoaded)
+let titleInput;
+let markdownInput;
+let previewDiv;
+let notesList;
+let saveBtn;
+let newNoteBtn;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ✅ Initialize DOM elements AFTER DOM is fully loaded
+    titleInput = document.getElementById('note-title');
+    markdownInput = document.getElementById('markdown-input');
+    previewDiv = document.getElementById('markdown-preview');
+    notesList = document.getElementById('notes-list');
+    saveBtn = document.getElementById('save-btn');
+    newNoteBtn = document.getElementById('new-note-btn');
+    
+    // ✅ Validate elements exist before using
+    if (!titleInput || !markdownInput || !previewDiv || !notesList || !saveBtn || !newNoteBtn) {
+        console.error('❌ Some DOM elements not found:', {
+            titleInput: !!titleInput,
+            markdownInput: !!markdownInput,
+            previewDiv: !!previewDiv,
+            notesList: !!notesList,
+            saveBtn: !!saveBtn,
+            newNoteBtn: !!newNoteBtn
+        });
+        return;
+    }
+    
     loadNotes();
     setupListeners();
 });
