@@ -1,12 +1,16 @@
 global:
-  scrape_interval: 30s  # Increased to save CPU
-  evaluation_interval: 30s
-
+  scrape_interval: 15s      # Seberapa sering Prometheus menarik data secara default
+  evaluation_interval: 15s  # Seberapa sering mengevaluasi rules/alerts
 
 scrape_configs:
-  - job_name: "prometheus"
-    static_configs: [{ targets: ["localhost:9090"] }]
-  - job_name: "cadvisor"
-    static_configs: [{ targets: ["cadvisor:8082"] }]
-  # - job_name: "node-exporter"
-  #   static_configs: [{ targets: ["node-exporter:9100"] }]
+  # Job untuk memantau backend Bun-Hono Anda
+  - job_name: 'notion_backend'
+    scrape_interval: 5s     # Kita buat 5 detik agar datanya cepat terlihat saat development
+    metrics_path: '/metrics' # Path default tempat metrik diekspos
+    static_configs:
+      - targets: ['backend:3000'] # Menggunakan nama service Docker dan port internal
+
+  # (Opsional) Job untuk memantau diri Prometheus sendiri
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

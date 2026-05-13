@@ -4,13 +4,26 @@ import { logger } from 'hono/logger';
 import router from './routes/noteRoutes.js';
 import pool from './config/db.js';
 
+// ✅ Import Middleware & Endpoint Prometheus
+import { metricsMiddleware, metricsEndpoint } from './middlewares/metrics.js';
+
 const app = new Hono();
 
-// 1. Middleware Logging & CORS
+// ==========================================
+// 📊 1. PROMETHEUS METRICS SETUP
+// ==========================================
+app.use('*', metricsMiddleware);
+app.get('/metrics', metricsEndpoint);
+
+// ==========================================
+// 2. Middleware Logging & CORS
+// ==========================================
 app.use('*', logger());
 app.use('*', cors());
 
-// 2. Global Error Handler
+// ==========================================
+// 3. Global Error Handler
+// ==========================================
 app.onError((err, c) => {
   console.error('💥 UNHANDLED ERROR:', err);
   return c.json(
@@ -19,8 +32,11 @@ app.onError((err, c) => {
   );
 });
 
-// 3. Mount Routes
+// ==========================================
+// 4. Mount Routes
+// ==========================================
 app.route('/api', router);
+
 // Init DB
 const initDB = async (): Promise<void> => {
   const maxRetries = 5;
@@ -44,6 +60,7 @@ const initDB = async (): Promise<void> => {
     }
   }
 };
+
 // 🔐 Helper: Validasi env var wajib ada
 const getEnv = (key: string): string => {
   const value = process.env[key];
@@ -53,7 +70,6 @@ const getEnv = (key: string): string => {
   return value;
 };
 const APP_PORT = parseInt(getEnv('APP_PORT'));
-
 
 initDB()
   .then(() => {

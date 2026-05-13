@@ -2,14 +2,14 @@
 services:
   # 🗄️ DATABASE
   db:
-    image: mysql:8.0.1     # ✅ Gunakan server resmi, bukan client alpine
+    image: mysql:8.4   # ✅ Gunakan server resmi, bukan client alpine
     container_name: notion_db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
     ports:
-      - "3306:3306"           # ✅ Standar Host:Container
+      - "${DB_PORT}:3306"           # ✅ Standar Host:Container
     volumes:
       - db_data:/var/lib/mysql:Z
     networks:
@@ -99,40 +99,6 @@ services:
       resources:
         limits:
           memory: 192M
-          cpus: '0.2'
-
-  # 🐳 CADVISOR (Docker Container Metrics)
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: notion_cadvisor
-    restart: unless-stopped
-    privileged: true
-    userns_mode: "keep-id"
-    security_opt:
-      - label=disable
-    ports:
-      - "8082:8080"
-    volumes:
-      - /:/rootfs:ro,Z
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro,Z
-      - /dev/disk/:/dev/disk:ro,Z
-      - /etc/machine-id:/etc/machine-id:ro,Z
-      # ✅ Your verified host socket path
-      - /run/user/1000/podman/podman.sock:/var/run/podman.sock:ro,Z
-      - /home/qiddis/.local/share/containers:/var/lib/containers:ro,Z
-    command:
-      - '--housekeeping_interval=10s'
-      - '--docker=false'
-      - '--containerd=false'
-      - '--podman=unix:///var/run/podman.sock'
-      - '--store_container_labels=false'
-    networks:
-      - notion_net
-
-    deploy:
-      resources:
-        limits:
-          memory: 128M
           cpus: '0.2'
 
 volumes:
