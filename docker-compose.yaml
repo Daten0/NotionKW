@@ -13,7 +13,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql:Z
     networks:
-      - notion_net
+      - tunnel-net
 
   # ⚙️ BACKEND
   backend:
@@ -37,7 +37,7 @@ services:
     depends_on:
       - db
     networks:
-      - notion_net
+      - tunnel-net
 
   # 🌐 FRONTEND
   frontend:
@@ -51,7 +51,7 @@ services:
     depends_on:
       - backend
     networks:
-      - notion_net
+      - tunnel-net
   
   # 📊 PROMETHEUS (Metrics Storage)
   prometheus:
@@ -70,7 +70,7 @@ services:
       - '--storage.tsdb.min-block-duration=2h'
       - '--web.enable-lifecycle'
     networks:
-      - notion_net
+      - tunnel-net
     deploy:
       resources:
         limits:
@@ -92,7 +92,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=${GF_USERS_ALLOW_SIGN_UP}
       # - GF_RENDERING_SERVER_URL=  # Disable rendering (saves RAM)
     networks:
-      - notion_net
+      - tunnel-net
     depends_on:
       - prometheus
     deploy:
@@ -100,6 +100,19 @@ services:
         limits:
           memory: 192M
           cpus: '0.2'
+    
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: notion_cloudflare-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run  # ✅ WAJIB ADA: Perintah untuk menjalankan tunnel
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN} # Paste your token here or use a .env file
+    ports:
+      - "8082:8080"
+    networks:
+      - tunnel-net
+
 
 volumes:
   db_data:
@@ -107,5 +120,5 @@ volumes:
   grafana_:
 
 networks:
-  notion_net:
+  tunnel-net:
     driver: bridge
